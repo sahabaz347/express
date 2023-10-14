@@ -7,12 +7,14 @@ const logger = (req, res, next) => {
     next();
 }
 app.use(express.json());
-app.use(logger);
 app.use(express.static('./public'))
 app.use((req, res, next) => {
     req.requestedAt = new Date().toISOString();
     next();
 })
-app.use(morgan('dev'))
+if (process.env.NODE_ENV == 'development') {
+    app.use(logger);
+    app.use(morgan('dev'))
+}
 app.use('/app/v1/movies', moviesRouter)
 module.exports = app;

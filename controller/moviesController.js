@@ -1,100 +1,103 @@
 const fs = require('fs');
-let movies = JSON.parse(fs.readFileSync('./data/movies.json', 'utf-8'))
-
-//route=http method +url
-exports.checkId = (req, res, next, value) => {
+const moviesModel = require('./../model/moviesModel');
+exports.checkId = async (req, res, next, value) => {
+    let movieList = await getMovies();
+    let movies = movieList.map(row => Object.assign({}, row));
     const movieIdToFind = +value;
-    const foundMovie = movies.find(movies => movies.id === movieIdToFind)
+    const foundMovie = movies.find(movie => movie.id === movieIdToFind)
     if (!foundMovie) {
         return errorFunction(req, res, "Movie with id " + movieIdToFind + " is not found");
     }
     next();
 }
 exports.validateBody = (req, res, next) => {
-    if (!req.body.name) {
-        return errorFunction(req, res, "please provide the name details ")
-    } else if (!req.body.relaseDate) {
-        return errorFunction(req, res, "please provide the relasedate details")
-
+    const  keyList=['name','relaseDate','duration'];
+    switch (req.method) {
+        case "PATCH":
+            const areAllKeysValid = Object.keys(req.body).every(key => keyList.includes(key));
+            if(!areAllKeysValid){
+                return errorFunction(req, res, "please provide the correct details ")
+            }
+            break;
+        default:
+            if (!req.body.name) {
+                return errorFunction(req, res, "please provide the name details ")
+            } else if (!req.body.relaseDate) {
+                return errorFunction(req, res, "please provide the relasedate details")
+            } else if (!req.body.duration) {
+                return errorFunction(req, res, "please provide the duration details")
+            }
+            break;
     }
+
     next();
 }
-exports.getMovie = (req, res) => {
+exports.getMovie = async (req, res) => {
+    let movieList = await getMovies();
+    let movies = movieList.map(row => Object.assign({}, row));
     res.status(200).json({
         status: 200,
         requestedAt: req.requestedAt,
         count: movies.length,
-        data: {
-            movies
-        }
+        data: { movies }
     })
 }
-exports.postMovie = (req, res) => {
-    let newId = 1;
-    if (movies.length > 0) {
-        newId = movies[movies.length - 1].id + 1;
-    }
-    const movie = { ...{ id: newId }, ...req.body }
-    movies = [...movies, movie];
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
-        res.status(201).json({
-            status: 201,
-            requestedAt: req.requestedAt,
-            data: { movie }
-        })
+exports.postMovie = async (req, res) => {
+    postMovie = await moviesModel.postMovieList(req.body);
+    const movie = { ...{ id: postMovie.insertId }, ...req.body }
+    res.status(201).json({
+        status: 201,
+        requestedAt: req.requestedAt,
+        data: { movie }
     })
-    // console.log(movies)
 }
-exports.getMovieById = (req, res) => {
+exports.getMovieById = async (req, res) => {
     const movieIdToFind = +req.params.id;
-    const foundMovie = movies.find(movies => movies.id === movieIdToFind)
+    let movieDetails = await getMovies(movieIdToFind);
+    let movie = movieDetails.map(row => Object.assign({}, row));
     res.status(200).json({
         status: 200,
         requestedAt: req.requestedAt,
         massage: "success",
-        data: foundMovie
+        data: movie
     })
 
 }
-exports.updateByPutDetails = (req, res) => {
+exports.updateByPutDetails = async (req, res) => {
     findMovieID = +req.params.id;
-    const findMovieIndex = movies.findIndex(movie => movie.id === findMovieID);
-    const movie = { id: findMovieID, ...req.body };
-    movies[findMovieIndex] = movie;
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
+    updateMovie = await moviesModel.updateMovieByPut(req.method, findMovieID, req.body);
+    if (updateMovie.affectedRows == 1) {
+        const movie = { id: findMovieID, ...req.body };
         res.status(201).json({
             status: 201,
             requestedAt: req.requestedAt,
             data: movie
         })
-    })
+    }
 }
-exports.updateByPatchDetail = (req, res) => {
-    const findId = + req.params.id;
-    let getMovieItemById = movies.find(movie => movie.id === findId);
-    let getMovieIndex = movies.findIndex(movie => movie.id === findId);
-    updateMovie = { ...getMovieItemById, ...req.body };
-    movies[getMovieIndex] = updateMovie;
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
+exports.updateByPatchDetail = async (req, res) => {
+    const findMovieID = + req.params.id;
+    updateMovie = await moviesModel.updateMovieByPut(req.method, findMovieID, req.body);
+    if (updateMovie.affectedRows == 1) {
+        let movieDetails = await getMovies(findMovieID);
+        let movie = movieDetails.map(row => Object.assign({}, row));
         res.status(201).json({
             status: 201,
             requestedAt: req.requestedAt,
-            data: updateMovie
+            data: movie
         })
-    })
-
+    }
 }
-exports.DeleteById = (req, res) => {
+exports.DeleteById = async (req, res) => {
     let deleteMovieId = +req.params.id;
-    isValueExist = movies.find(movie => movie.id === deleteMovieId);
-    movies = movies.filter(movie => movie.id !== deleteMovieId);
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
+    deleteMovie = await moviesModel.deleteMovieFromList(deleteMovieId)
+    if (deleteMovie) {
         res.status(204).json({
-            status: 201,
+            status: 204,
             massage: "success",
-            data: { movies }
+            data: null
         })
-    })
+    }
 }
 const errorFunction = (req, res, massage) => {
     return res.status(404).json({
@@ -104,3 +107,11 @@ const errorFunction = (req, res, massage) => {
         data: []
     })
 }
+const getMovies = async (movieIdToFind, req, res) => {
+    try {
+        return await moviesModel.getMovieList(movieIdToFind);
+    } catch (error) {
+        console.error('Error in controller:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
