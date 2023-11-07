@@ -15,4 +15,5 @@ router.route('/:id')
     .patch(moviesControllerObj.updateByPatchDetail)
     .delete(moviesControllerObj.DeleteById)
 
+    
 module.exports = router;
