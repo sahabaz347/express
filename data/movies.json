@@ -1,1 +1,34 @@
-[{"id":1,"name":"T 3","relaseDate":2023,"dureation":150}]
+[
+    {
+        "name": "Tiger 3",
+        "description":"this movie is important for YRF Spy Universe.it is the third movie where Tiger is in a dengerious situation.",
+        "duration": 155,
+        "rating":9.5,
+        "totalRating":10000,
+        "relaseYear": 2023,
+        "relaseDate": "2023-11-01T00:00:00Z",
+        "genres":["Action","Thriller","Adventure"],
+        "directors":["Maneesh Sharma","test"],
+        "coverImage":"https://upload.wikimedia.org/wikipedia/en/thumb/f/f8/Tiger_3_poster.jpg/220px-Tiger_3_poster.jpg",
+        "actors":["Salman Khan","Katrina Kaif","Emraan Hashmi"],
+        "price":400
+
+
+    },
+    {
+        "name": "Tiger 4",
+        "description":"this movie is important for YRF Spy Universe.it is the third movie where Tiger is in a dengerious situation.",
+        "duration": 150,
+        "rating":9,
+        "totalRating":11000,
+        "relaseYear": 2024,
+        "relaseDate": "2024-11-01T00:00:00Z",
+        "genres":["Action","Thriller","Adventure"],
+        "directors":["Maneesh Sharma","test"],
+        "coverImage":"https://upload.wikimedia.org/wikipedia/en/thumb/f/f8/Tiger_3_poster.jpg/220px-Tiger_3_poster.jpg",
+        "actors":["Salman Khan","Katrina Kaif","Emraan Hashmi"],
+        "price":700
+
+
+    }
+]

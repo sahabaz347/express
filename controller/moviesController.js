@@ -1,106 +1,159 @@
-const fs = require('fs');
-let movies = JSON.parse(fs.readFileSync('./data/movies.json', 'utf-8'))
+const MovieModel = require('./../model/moviesModel')
+const ApiFeature = require('./../utils/ApiFeature')
 
-//route=http method +url
-exports.checkId = (req, res, next, value) => {
-    const movieIdToFind = +value;
-    const foundMovie = movies.find(movies => movies.id === movieIdToFind)
-    if (!foundMovie) {
-        return errorFunction(req, res, "Movie with id " + movieIdToFind + " is not found");
+class Movie {
+    getHeighestRetedMovie = (req, res, next) => {
+        req.query.rating = { gte: '9' }
+        req.query.limit = '2';
+        req.query.sort = 'rating';
+        req.query.fields = 'name,duration,rating';
+        next();
     }
-    next();
-}
-exports.validateBody = (req, res, next) => {
-    if (!req.body.name) {
-        return errorFunction(req, res, "please provide the name details ")
-    } else if (!req.body.relaseDate) {
-        return errorFunction(req, res, "please provide the relasedate details")
-
-    }
-    next();
-}
-exports.getMovie = (req, res) => {
-    res.status(200).json({
-        status: 200,
-        requestedAt: req.requestedAt,
-        count: movies.length,
-        data: {
-            movies
+    getMovies = async (req, res) => {
+        try {
+            const featureObj = new ApiFeature(MovieModel.find(), req.query).filter().sort().fields().pagination(MovieModel.countDocuments())
+            let getMoviesData = await featureObj.query;
+            if (getMoviesData.length == 0)
+                throw new Error('No movie found!')
+            res.status(201).json({
+                status: 201,
+                length: getMoviesData.length,
+                requestedAt: req.requestedAt,
+                data: getMoviesData
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
         }
-    })
-}
-exports.postMovie = (req, res) => {
-    let newId = 1;
-    if (movies.length > 0) {
-        newId = movies[movies.length - 1].id + 1;
     }
-    const movie = { ...{ id: newId }, ...req.body }
-    movies = [...movies, movie];
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
-        res.status(201).json({
-            status: 201,
-            requestedAt: req.requestedAt,
-            data: { movie }
-        })
-    })
-    // console.log(movies)
-}
-exports.getMovieById = (req, res) => {
-    const movieIdToFind = +req.params.id;
-    const foundMovie = movies.find(movies => movies.id === movieIdToFind)
-    res.status(200).json({
-        status: 200,
-        requestedAt: req.requestedAt,
-        massage: "success",
-        data: foundMovie
-    })
+    postMovie = async (req, res) => {
+        try {
+            const postData = await MovieModel.create(req.body);
+            res.status(201).json({
+                status: 201,
+                requestedAt: req.requestedAt,
+                data: postData
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
 
-}
-exports.updateByPutDetails = (req, res) => {
-    findMovieID = +req.params.id;
-    const findMovieIndex = movies.findIndex(movie => movie.id === findMovieID);
-    const movie = { id: findMovieID, ...req.body };
-    movies[findMovieIndex] = movie;
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
-        res.status(201).json({
-            status: 201,
-            requestedAt: req.requestedAt,
-            data: movie
-        })
-    })
-}
-exports.updateByPatchDetail = (req, res) => {
-    const findId = + req.params.id;
-    let getMovieItemById = movies.find(movie => movie.id === findId);
-    let getMovieIndex = movies.findIndex(movie => movie.id === findId);
-    updateMovie = { ...getMovieItemById, ...req.body };
-    movies[getMovieIndex] = updateMovie;
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
-        res.status(201).json({
-            status: 201,
-            requestedAt: req.requestedAt,
-            data: updateMovie
-        })
-    })
 
+    }
+    getMovieById = async (req, res) => {
+        try {
+            // const getMovie = await MovieModel.find({_id:req.params.id});
+            const getMovie = await MovieModel.findById(req.params.id);
+            if (getMovie === null)
+                throw new Error('No movie found!')
+            res.status(201).json({
+                status: 201,
+                requestedAt: req.requestedAt,
+                data: getMovie
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+
+    }
+    updateByPutDetails = async (req, res) => {
+        try {
+            const updateMovieData = await MovieModel.updateOne({ _id: req.params.id }, { $set: req.body }, { runValidators: true });
+            if (updateMovieData.modifiedCount != 1) {
+                throw new Error('please provide correct details')
+            }
+            const getMovie = await MovieModel.findById(req.params.id);
+
+            res.status(201).json({
+                status: 201,
+                requestedAt: req.requestedAt,
+                data: getMovie
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+    }
+    updateByPatchDetail = async (req, res) => {
+        try {
+            const updateMovieData = await MovieModel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+            res.status(201).json({
+                status: 201,
+                requestedAt: req.requestedAt,
+                data: updateMovieData
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+    }
+    DeleteById = async (req, res) => {
+        try {
+            const getMoviesData = await MovieModel.findByIdAndDelete(req.params.id);
+            if (getMoviesData === null)
+                throw new Error('No movie found!')
+            res.status(204).json({
+                status: 204,
+                requestedAt: req.requestedAt,
+                data: null
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+    }
+    getMoviesStats=async (req,res)=>{
+        try{
+            let stat=await MovieModel.aggregate([
+                {$match:{rating:{$gte:8}}},
+                {$group:{
+                    _id:'$relaseYear',
+                    avgRating:{$avg:'$rating'},
+                    avgPrice:{$avg:'$price'},
+                    minPrice:{$avg:'$price'},
+                    maxPrice:{$avg:'$price'},
+                    priceTotal:{$sum:'$price'},
+                    movieCount:{$sum:1},
+                }},
+                {$sort:{minPrice:1}}
+
+            ])
+            console.log(123,stat)
+
+            res.status(200).json({
+                status: 200,
+                length:stat.length,
+                requestedAt: req.requestedAt,
+                data: stat
+            })
+        }catch(error){
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+    }
 }
-exports.DeleteById = (req, res) => {
-    let deleteMovieId = +req.params.id;
-    isValueExist = movies.find(movie => movie.id === deleteMovieId);
-    movies = movies.filter(movie => movie.id !== deleteMovieId);
-    fs.writeFile('./data/movies.json', JSON.stringify(movies), (error) => {
-        res.status(204).json({
-            status: 201,
-            massage: "success",
-            data: { movies }
-        })
-    })
-}
-const errorFunction = (req, res, massage) => {
-    return res.status(404).json({
-        status: 404,
-        requestedAt: req.requestedAt,
-        massage: massage,
-        data: []
-    })
-}
+module.exports = Movie
+
