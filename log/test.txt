@@ -1,0 +1,20 @@
+the new text file created with name Tiger 8 as created by sahabaz
+the new text file created with name Tiger 9 as created by sahabaz
+query excecution time is -94 milisecoends
+query excecution time is 109 milisecoends
+the new text file created with name Tiger 1 as created by sahabaz
+the new text file created with name Tiger 2 as created by sahabaz
+the new text file created with name Tiger 3 as created by sahabaz
+the new text file created with name test as created by sahabaz
+query excecution time is 152 milisecoends
+query excecution time is 952 milisecoends
+query excecution time is 35 milisecoends
+query excecution time is 30 milisecoends
+query excecution time is 66 milisecoends
+query excecution time is 214 milisecoends
+query excecution time is 33 milisecoends
+query excecution time is 33 milisecoends
+the new text file created with name test1 as created by sahabaz
+the new text file created with name test4 as created by sahabaz
+query excecution time is 88 milisecoends
+query excecution time is 46 milisecoends

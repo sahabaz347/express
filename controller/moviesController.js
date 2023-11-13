@@ -125,7 +125,7 @@ class Movie {
     getMoviesStats = async (req, res) => {
         try {
             let stat = await MovieModel.aggregate([
-                { $match: { rating: { $gte: 8 } } },
+                { $match: { rating: { $gte: 6 } } },
                 {
                     $group: {
                         _id: '$relaseYear',
@@ -144,6 +144,36 @@ class Movie {
                 length: stat.length,
                 requestedAt: req.requestedAt,
                 data: stat
+            })
+        } catch (error) {
+            res.status(400).json({
+                status: 400,
+                requestedAt: req.requestedAt,
+                message: error.message
+            })
+        }
+    }
+     getMoviesGenres= async(req,res)=>{
+        try {
+            const genres=req.params.genres;
+            const movies=await MovieModel.aggregate([
+                {$unwind:'$genres'},
+                {$group:{
+                    _id:'$genres',
+                    movieCount:{$sum:1},
+                    movies:{$push:'$name'}
+                }},
+                {$addFields:{genres:"$_id"}},
+                {$project:{_id:0}},
+                {$sort:{movieCount:-1}},
+                // {$limit:2}
+                {$match:{genres:genres}}
+            ])
+            res.status(200).json({
+                status: 200,
+                length: movies.length,
+                requestedAt: req.requestedAt,
+                data: movies
             })
         } catch (error) {
             res.status(400).json({
