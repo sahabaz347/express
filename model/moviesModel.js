@@ -8,7 +8,7 @@ const movieSchema = new mongoose.Schema({
         unique: true,
         minLength:[3,'minimum length should be atleast 3'],
         maxLength:[10,'maximum length should be 10'],
-        validate:[validator.isAlpha,"movie name must be a string!"],
+        // validate:[validator.isAlpha,"movie name must be a string!"],
         trim: true
     },
     description: {
@@ -89,24 +89,24 @@ movieSchema.post('save', function (doc, next) {
     });
     next()
 })
-movieSchema.pre(/^find/, function (next) {
-    this.find({ releaseDate: { $lte: Date.now() } })
-    this.startTime = Date.now();
-    next()
-})
-movieSchema.post(/^find/, function (docs, next) {
-    this.find({ releaseDate: { $lte: Date.now() } })
-    this.endTime = Date.now();
-    const content = `query excecution time is ${this.endTime-this.startTime} milisecoends\n`;
-    fs.writeFileSync('./log/test.txt', content, { flag: 'a' }, (error) => {
-        if (error) {
-            console.log(error.message)
-        } else {
-            console.log('success')
-        }
-    });
-    next()
-})
+// movieSchema.pre(/^find/, function (next) {
+//     this.find({ releaseDate: { $lte: Date.now() } })
+//     this.startTime = Date.now();
+//     next()
+// })
+// movieSchema.post(/^find/, function (docs, next) {
+//     this.find({ releaseDate: { $lte: Date.now() } })
+//     this.endTime = Date.now();
+//     const content = `query excecution time is ${this.endTime-this.startTime} milisecoends\n`;
+//     fs.writeFileSync('./log/test.txt', content, { flag: 'a' }, (error) => {
+//         if (error) {
+//             console.log(error.message)
+//         } else {
+//             console.log('success')
+//         }
+//     });
+//     next()
+// })
 movieSchema.pre('aggregate',function(next){
     this.pipeline().unshift({$match:{releaseDate:{$lte:new Date()}}});
     next();
