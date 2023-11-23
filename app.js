@@ -1,5 +1,6 @@
 const express = require('express');
 const moviesRouter = require('./route/moviesRouter');
+const authRouter=require('./route/authRouter');
 const CustomError = require('./utils/CustomError');
 const globalErrorHandler = require('./controller/errorController');
 let app = express();
@@ -18,6 +19,7 @@ if (process.env.NODE_ENV == 'development') {
     app.use(logger);
     app.use(morgan('dev'))
 }
+app.use('/app/v1/users',authRouter)
 app.use('/app/v1/movies', moviesRouter)
 app.all('*', (req, res, next) => {
     const err = new CustomError(`can't find ${req.originalUrl} on the server!`, 404)

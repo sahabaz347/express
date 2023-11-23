@@ -14,7 +14,7 @@ const castErrorHandler = (error) => {
     return new CustomError(msg, 400);
 }
 const duplicateErrorHandler = (error) => {
-    const msg = `This is already a movie with name ${error.keyValue.name}.please use another name!`;
+    const msg = `This `+Object.keys(error.keyValue)+` already exist with name `+Object.values(error.keyValue)+` please use another `+Object.keys(error.keyValue)+`!`;
     return new CustomError(msg, 400);
 }
 const validationErrorHandler = (error) => {
