@@ -6,7 +6,6 @@ const devErrors = (error, res) => {
         message: error.message,
         stackTrace: error.stack,
         error: error
-
     });
 }
 const castErrorHandler = (error) => {
@@ -14,7 +13,7 @@ const castErrorHandler = (error) => {
     return new CustomError(msg, 400);
 }
 const duplicateErrorHandler = (error) => {
-    const msg = `This `+Object.keys(error.keyValue)+` already exist with name `+Object.values(error.keyValue)+` please use another `+Object.keys(error.keyValue)+`!`;
+    const msg = `This ` + Object.keys(error.keyValue) + ` already exist with name ` + Object.values(error.keyValue) + ` please use another ` + Object.keys(error.keyValue) + `!`;
     return new CustomError(msg, 400);
 }
 const validationErrorHandler = (error) => {
@@ -28,6 +27,14 @@ const validationErrorHandler = (error) => {
     const errorMessage = errors.join(', ')
     const msg = `Invalid input data(${errorMessage})`;
     return new CustomError(msg, 400);
+}
+const TokenExpiredError= (error)=>{
+    const msg=`${error.message}. Please login again!`;
+    return new CustomError(msg,400);
+}
+const invalidSignature =(error)=>{
+    const msg=`Invalid token. Please login again!`;
+    return new CustomError(msg,400);
 }
 const prodErrors = (error, res) => {
     if (error.isOperational) {
@@ -43,21 +50,17 @@ const prodErrors = (error, res) => {
     }
 
 }
-
-
 module.exports = (error, req, res, next) => {
     error.statusCode = error.statusCode || 500;
     error.status = error.status || "Error!";
     if (process.env.NODE_ENV === 'development') {
         devErrors(error, res)
     } else if (process.env.NODE_ENV === 'production') {
-        if (error.name == 'CastError') {
-            error = castErrorHandler(error);
-        } if (error.code == 11000) {
-            error = duplicateErrorHandler(error);
-        } if (error.name == 'ValidationError') {
-            error = validationErrorHandler(error);
-        }
+        if (error.name == 'CastError') error = castErrorHandler(error);
+        if (error.code == 11000) error = duplicateErrorHandler(error);
+        if (error.name == 'ValidationError') error = validationErrorHandler(error);
+        if (error.name == 'TokenExpiredError') error = TokenExpiredError(error);
+        if (error.name == 'JsonWebTokenError') error = invalidSignature(error);
         prodErrors(error, res)
     }
 
