@@ -21,6 +21,7 @@ class Movie {
             status: 201,
             length: getMoviesData.length,
             requestedAt: req.requestedAt,
+            user:req.user,
             data: getMoviesData
         })
     })

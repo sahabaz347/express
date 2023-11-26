@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please enter your password.'],
         minlength: 8,
-        select:false
+        select: false
     },
     confirmPassword: {
         type: String,
@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
             },
             message: 'Password & Confirm Password does not match!'
         }
+    },
+    passwordChangedAt: {
+        type: Date,
+        default: Date.now()
     }
 })
 userSchema.pre('save', async function (next) {
@@ -43,8 +47,14 @@ userSchema.pre('save', async function (next) {
     this.confirmPassword = undefined;
     next()
 })
-userSchema.methods.comparePassword=async function(pass,dbPass){
-return await bcrypt.compare(pass,dbPass);
+userSchema.methods.comparePassword = async function (pass, dbPass) {
+    return await bcrypt.compare(pass, dbPass);
+}
+userSchema.methods.passwordChange = async function (jwtTimeStamp) {
+    if (this.passwordChangedAt) {
+        return jwtTimeStamp < (this.passwordChangedAt.getTime() / 1000)
+    }
+    return false;
 }
 const User = mongoose.model('User', userSchema);
 module.exports = User;

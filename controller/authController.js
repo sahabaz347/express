@@ -2,7 +2,7 @@ const userModel = require('../model/userModel');
 const CustomError = require('../utils/CustomError');
 const asyncErrorHandler = require('./../utils/AsyncErrorHandler');
 const jwt = require('jsonwebtoken');
-const util= require('util');
+const util = require('util');
 
 
 class User {
@@ -40,18 +40,28 @@ class User {
     })
     protectRoute = asyncErrorHandler(async (req, res, next) => {
         //1.is there any authentication header
-        const testToken=req.headers.authorization;
-        if(!testToken || testToken.starts){
+        const testToken = req.headers.authorization;
+        if (!testToken || testToken.starts) {
             const err = new CustomError('Authentication Required!', 400);
             return next(err)
         }
-       const token=testToken.split(" ")[1];
-       //2.verify the token
-       const decodeStr= await util.promisify(jwt.verify)(token,process.env.SECRET_STR);
-        console.log(token,decodeStr);
+        const token = testToken.split(" ")[1];
+        //2.verify the token
+        const decodeStr = await util.promisify(jwt.verify)(token, process.env.SECRET_STR);
         //3.If the user exist
+        const user = await userModel.findById(decodeStr.id);
+        if (!user) {
+            const err = new CustomError('The user with the given token does not exist!', 401)
+            return next(err);
+        }
         //4.if the user changed password after the token was issued
-        next() 
+        const isPasswordChanged = await user.passwordChange(decodeStr.iat)
+        if (isPasswordChanged) {
+            const err = new CustomError('Password han been changed recently.Please login again!', 401)
+            return next(err);
+        }
+        req.user=user;
+        next()
     })
 }
 module.exports = User;
