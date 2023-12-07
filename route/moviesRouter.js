@@ -12,12 +12,12 @@ router.route('/movies-genres/:genres').get(moviesControllerObj.getMoviesGenres)
 
 router.route('/')
 .get(authControllerObj.protectRoute,moviesControllerObj.getMovies)
-.post(moviesControllerObj.postMovie)
+.post(authControllerObj.protectRoute,moviesControllerObj.postMovie)
 router.route('/:id')
-    .get(moviesControllerObj.getMovieById)
-    .put(moviesControllerObj.updateByPutDetails)
-    .patch(moviesControllerObj.updateByPatchDetail)
-    .delete(moviesControllerObj.DeleteById)
+    .get(authControllerObj.protectRoute,moviesControllerObj.getMovieById)
+    .put(authControllerObj.protectRoute,moviesControllerObj.updateByPutDetails)
+    .patch(authControllerObj.protectRoute,moviesControllerObj.updateByPatchDetail)
+    .delete(authControllerObj.protectRoute,authControllerObj.restricted('admin'),moviesControllerObj.DeleteById)
 
     
 module.exports = router;
